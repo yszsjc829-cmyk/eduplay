@@ -2,12 +2,14 @@ from flask import Flask, request, jsonify, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 import os
+import tempfile
 
 app = Flask(__name__, static_folder='.')
 CORS(app)
 
-# 数据库配置
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
+# 使用临时目录存储数据库
+db_path = os.path.join(tempfile.gettempdir(), 'users.db')
+app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = 'your-secret-key'
 
@@ -73,6 +75,9 @@ def get_users():
 def index():
     return send_from_directory('.', 'index.html')
 
+# Vercel需要的handler
+def handler(request):
+    return app(request.environ, lambda status, headers: None)
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
-
